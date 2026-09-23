@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consola de datos · Estación ambiental Grupo 1</title>
+<style>
+  :root{
+    --fondo:#0c1218;
+    --panel:#121b24;
+    --panel2:#0f1720;
+    --borde:#1f2c38;
+    --tinta:#e8eef4;
+    --tinta2:#9fb0bf;
+    --tinta3:#6b7c8c;
+    --acento:#3fb8a6;
+    --sombra:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.35);
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 500px at 70% -10%, rgba(63,184,166,.06), transparent 60%),
+      var(--fondo);
+    color:var(--tinta);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.45;
+    min-height:100vh;
+  }
+  header.barra{
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:16px 22px;border-bottom:1px solid var(--borde);
+    background:linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+  }
+  .marca{display:flex;align-items:baseline;gap:12px;margin-right:auto}
+  .marca h1{font-size:18px;margin:0;letter-spacing:.02em;font-weight:650}
+  .marca .sub{font-family:var(--mono);font-size:11px;color:var(--tinta3);text-transform:uppercase;letter-spacing:.14em}
+  .btn{
+    font:inherit;font-size:13.5px;color:var(--tinta);
+    background:var(--panel);border:1px solid var(--borde);border-radius:8px;
+    padding:8px 13px;cursor:pointer;transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:#31465a;background:#16212c}
+  .btn:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+  .btn.primario{border-color:#2c6f64;background:#123028;color:#bff0e6}
+  .btn.primario:hover{background:#164038}
+  .btn.peligro{border-color:#4a2b2b;background:#241314;color:#f0c6c6}
+  .btn.peligro:hover{background:#311a1c}
+
+  main{display:grid;grid-template-columns:308px 1fr;gap:20px;padding:20px 22px 40px;max-width:1560px;margin:0 auto}
+  @media (max-width:980px){ main{grid-template-columns:1fr} }
+
+  aside{display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--borde);border-radius:12px;box-shadow:var(--sombra)}
+  .panel h2{
+    margin:0;padding:11px 14px;border-bottom:1px solid var(--borde);
+    font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.14em;color:var(--tinta2);
+  }
+  .panel .cuerpo{padding:10px 14px 14px}
+
+  .vacio{color:var(--tinta3);font-size:13.5px;padding:6px 0}
+
+  ul.lista{list-style:none;margin:0;padding:0}
+  ul.lista li{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.05)}
+  ul.lista li:last-child{border-bottom:none}
+  .punto{width:9px;height:9px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,255,255,.06)}
+  .nomDatos{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .meta{font-family:var(--mono);font-size:10.5px;color:var(--tinta3);white-space:nowrap}
+  .ojo{background:none;border:none;color:var(--tinta3);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px}
+  .ojo:hover{color:var(--tinta)}
+  .ojo:focus-visible{outline:2px solid var(--acento);outline-offset:1px;border-radius:4px}
+
+  .canales label{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13.5px;cursor:pointer}
+  .canales input{accent-color:var(--acento)}
+  .canales .u{color:var(--tinta3);font-family:var(--mono);font-size:11px;margin-left:auto}
+
+  .filtros{display:flex;gap:8px;flex-wrap:wrap}
+  .filtros select{
+    font:inherit;font-size:13px;background:var(--panel2);color:var(--tinta);
+    border:1px solid var(--borde);border-radius:8px;padding:6px 9px;
+  }
+
+  section.trazas{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .regla{
+    display:grid;grid-template-columns:150px 1fr;align-items:end;
+    background:var(--panel);border:1px solid var(--borde);border-radius:12px;
+    padding:8px 12px 6px;position:sticky;top:8px;z-index:5;box-shadow:var(--sombra);
+  }
+  .regla .titulo{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--tinta2)}
+  .regla canvas{width:100%;height:26px;display:block}
+
+  .traza{background:var(--panel);border:1px solid var(--borde);border-radius:12px;box-shadow:var(--sombra);overflow:hidden}
+  .traza .cab{
+    display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:baseline;
+    padding:9px 14px 7px;border-bottom:1px solid var(--borde);
+  }
+  .traza .cab .nom{font-size:13.5px;font-weight:620;letter-spacing:.01em}
+  .traza .cab .uni{font-family:var(--mono);font-size:11px;color:var(--tinta3)}
+  .traza .cab .lectura{font-family:var(--mono);font-size:11.5px;color:var(--tinta2);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .traza .lienzo{position:relative}
+  .traza canvas{display:block;width:100%;height:150px}
+  .traza .vacia{color:var(--tinta3);font-size:12.5px;padding:14px}
+  .sinDatos{color:var(--tinta3);font-size:14px;text-align:center;padding:38px 10px;border:1px dashed var(--borde);border-radius:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:6px 10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap}
+  th{color:var(--tinta2);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;text-align:right;border-bottom:1px solid var(--borde)}
+  th:first-child,td:first-child{text-align:left}
+  td{font-family:var(--mono);color:var(--tinta)}
+  td.txt{font-family:var(--sans)}
+  .tablaScroll{max-height:290px;overflow:auto}
+  .nota{font-size:11.5px;color:var(--tinta3);padding:8px 14px 12px}
+  footer{padding:8px 22px 26px;color:var(--tinta3);font-size:11.5px;text-align:center}
+  @media (prefers-reduced-motion: no-preference){
+    .traza, .panel{transition:border-color .18s}
+    .traza:hover{border-color:#26384a}
+  }
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="marca">
+    <h1>Estación ambiental · Consola de datos</h1>
+    <span class="sub">Grupo 1 · CINF1P09</span>
+  </div>
+  <label class="btn" for="archivos" tabindex="0">Cargar CSV</label>
+  <input id="archivos" type="file" accept=".csv,text/csv" multiple hidden>
+  <button class="btn primario" id="btnEjemplo">Datos de ejemplo</button>
+  <button class="btn" id="btnExportar">Exportar visibles</button>
+  <button class="btn" id="btnFeatures">Exportar features (ML)</button>
+  <button class="btn peligro" id="btnLimpiar">Limpiar</button>
+</header>
+
+<main>
+  <aside>
+    <div class="panel">
+      <h2>Series cargadas</h2>
+      <div class="cuerpo"><ul class="lista" id="listaDatos"><li class="vacio">Sin datos. Carga un CSV o usa los de ejemplo.</li></ul></div>
+    </div>
+
+    <div class="panel">
+      <h2>Canales</h2>
+      <div class="cuerpo canales" id="listaCanales"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Filtros</h2>
+      <div class="cuerpo">
+        <div class="filtros">
+          <select id="fSegmento" title="Filtrar por segmento de captura"><option value="">Segmento: todos</option></select>
+          <select id="fOrigen" title="Filtrar por origen del dato"><option value="">Origen: todos</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Resumen</h2>
+      <div class="cuerpo" id="resumen"><div class="vacio">—</div></div>
+    </div>
+  </aside>
+
+  <section class="trazas">
+    <div class="regla">
+      <div class="titulo">Registro · tiempo (s)</div>
+      <canvas id="regla"></canvas>
+    </div>
+    <div id="trazas"></div>
+    <div class="panel">
+      <h2>Estadísticas por serie</h2>
+      <div class="tablaScroll"><table id="tablaStats"><tbody></tbody></table></div>
+      <div class="nota">n = muestras válidas; se excluyen <code>nan</code> y celdas vacías.</div>
+    </div>
+    <div class="panel">
+      <h2>Vista de datos</h2>
+      <div class="tablaScroll"><table id="tablaDatos"><tbody></tbody></table></div>
+      <div class="nota" id="notaDatos"></div>
+    </div>
+  </section>
+</main>
+
+<footer>Los datos embebidos provienen de las capturas del 16-09-2026 (CSV reales). Los archivos con columna <code>origen</code> indican si la fila fue medida en vivo, reproducida desde una grabación o simulada (no medida).</footer>
+
+<script>
+"use strict";
+
+/* ============ Definiciones de canales ============ */
+const CAMPOS = {
+  temperatura_C:      {etiqueta:"Temperatura",          unidad:"°C"},
+  humedad_pct:        {etiqueta:"Humedad",              unidad:"%RH"},
+  presion_hPa:        {etiqueta:"Presión",              unidad:"hPa"},
+  lux:                {etiqueta:"Iluminancia",          unidad:"lx"},
+  mq135_raw:          {etiqueta:"MQ135 · ADC crudo",    unidad:"cuentas"},
+  sonido_estado:      {etiqueta:"Sonido · estado",      unidad:"0/1"},
+  sonido_flancos_1s:  {etiqueta:"Sonido · flancos",     unidad:"eventos/s"},
+};
+const ORDEN_CAMPOS = ["temperatura_C","humedad_pct","presion_hPa","lux","mq135_raw","sonido_flancos_1s","sonido_estado"];
+const PALETA = ["#f2b544","#3fb8a6","#e4655c","#6aa9ff","#a48cf0","#9aa7b4","#7fd1ae","#e08fd0"];
+const MAX_FILAS_VISTA = 120;
+
+/* Datos reales embebidos: [{nombre, csv}] — inyectados por preparar_demo.py */
+const DATOS_EMBEBIDOS = [{"nombre": "csv_combinado_grupo1 (A: lux/sonido · B: MQ135)", "csv": "segmento,tiempo_ms,temperatura_C,humedad_pct,presion_hPa,lux,mq135_raw,sonido_estado,sonido_flancos_1s\nA,1386,nan,nan,nan,1088.3,18,0,0\nA,2386,nan,nan,nan,1083.3,18,0,0\nA,3386,nan,nan,nan,1080.8,18,0,0\nA,4386,nan,nan,nan,1080.0,18,0,0\nA,5386,nan,nan,nan,1081.7,18,0,0\nA,6386,nan,nan,nan,1082.5,18,0,0\nA,7386,nan,nan,nan,1082.5,18,0,0\nA,8386,nan,nan,nan,1081.7,18,0,0\nA,9387,nan,nan,nan,1078.3,18,0,0\nA,10387,nan,nan,nan,1076.7,18,0,0\nA,11387,nan,nan,nan,1073.3,18,0,0\nA,12387,nan,nan,nan,1053.3,18,0,0\nA,13387,nan,nan,nan,1049.2,18,0,0\nA,14387,nan,nan,nan,1049.2,18,0,0\nA,15387,nan,nan,nan,1070.0,18,0,0\nA,16387,nan,nan,nan,1072.5,18,0,0\nA,17387,nan,nan,nan,1072.5,18,0,0\nA,18387,nan,nan,nan,1075.8,18,0,0\nA,19387,nan,nan,nan,1071.7,18,0,0\nA,20387,nan,nan,nan,1075.8,18,0,0\nA,21387,nan,nan,nan,1079.2,18,0,0\nA,22387,nan,nan,nan,1082.5,18,0,0\nA,23387,nan,nan,nan,1084.2,18,0,0\nA,24387,nan,nan,nan,1080.0,18,0,0\nA,25387,nan,nan,nan,1077.5,18,0,0\nA,26387,nan,nan,nan,1075.8,18,0,0\nA,27387,nan,nan,nan,1075.8,18,0,2\nA,28387,nan,nan,nan,1078.3,18,0,0\nA,29387,nan,nan,nan,1083.3,18,0,0\nA,30387,nan,nan,nan,1086.7,18,0,0\nA,31387,nan,nan,nan,1088.3,18,0,0\nA,32387,nan,nan,nan,1090.0,18,0,0\nA,33387,nan,nan,nan,1088.3,18,0,0\nA,34387,nan,nan,nan,1097.5,18,0,0\nA,35387,nan,nan,nan,1103.3,18,0,0\nA,36387,nan,nan,nan,479.2,19,0,0\nA,37387,nan,nan,nan,430.0,19,0,0\nA,38387,nan,nan,nan,1100.0,18,0,0\nA,39387,nan,nan,nan,1095.8,18,0,0\nA,40387,nan,nan,nan,1116.7,19,0,0\nA,41387,nan,nan,nan,1112.5,18,0,4\nA,42387,nan,nan,nan,1113.3,18,0,0\nA,43387,nan,nan,nan,1068.3,18,0,0\nA,44387,nan,nan,nan,1048.3,18,0,0\nA,45387,nan,nan,nan,1040.8,18,0,0\nA,46387,nan,nan,nan,1040.8,19,0,0\nA,47387,nan,nan,nan,1050.0,19,0,0\nA,48387,nan,nan,nan,1103.3,18,0,0\nA,49387,nan,nan,nan,1100.0,19,0,0\nA,50387,nan,nan,nan,1098.3,19,0,0\nA,51387,nan,nan,nan,1100.0,18,0,0\nA,52387,nan,nan,nan,1102.5,18,0,0\nA,53387,nan,nan,nan,1103.3,18,0,0\nA,54387,nan,nan,nan,1105.8,18,0,0\nA,55387,nan,nan,nan,1113.3,18,0,0\nA,56387,nan,nan,nan,1120.8,18,0,0\nA,57387,nan,nan,nan,1125.0,18,0,0\nA,58387,nan,nan,nan,1130.0,18,0,0\nA,59387,nan,nan,nan,1133.3,18,0,0\nA,60387,nan,nan,nan,1132.5,18,0,0\nA,61387,nan,nan,nan,1137.5,18,0,0\nA,62387,nan,nan,nan,1135.8,18,0,0\nA,63387,nan,nan,nan,1135.0,18,0,0\nA,64387,nan,nan,nan,1131.7,18,0,0\nA,65387,nan,nan,nan,1131.7,18,0,0\nA,66387,nan,nan,nan,1138.3,18,0,0\nA,67387,nan,nan,nan,1140.8,18,0,0\nA,68387,nan,nan,nan,1140.8,18,0,0\nA,69387,nan,nan,nan,1137.5,18,0,0\nA,70387,nan,nan,nan,1135.0,18,0,0\nA,71387,nan,nan,nan,1134.2,18,0,0\nA,72387,nan,nan,nan,1130.0,18,0,0\nA,73387,nan,nan,nan,1126.7,18,0,0\nA,74387,nan,nan,nan,1127.5,18,0,0\nA,75387,nan,nan,nan,1130.0,18,0,0\nA,76387,nan,nan,nan,1133.3,18,0,0\nA,77387,nan,nan,nan,1134.2,18,0,0\nA,78387,nan,nan,nan,1136.7,18,0,0\nA,79387,nan,nan,nan,1136.7,18,0,0\nA,80387,nan,nan,nan,1133.3,18,0,0\nA,81387,nan,nan,nan,1129.2,18,0,0\nA,82387,nan,nan,nan,1130.0,18,0,0\nA,83387,nan,nan,nan,1125.0,18,0,0\nA,84387,nan,nan,nan,1124.2,18,0,0\nA,85387,nan,nan,nan,1127.5,18,0,0\nA,86387,nan,nan,nan,1127.5,18,0,0\nA,87387,nan,nan,nan,1129.2,18,0,0\nA,88387,nan,nan,nan,1128.3,18,0,0\nA,89387,nan,nan,nan,1127.5,18,0,0\nA,90387,nan,nan,nan,1125.0,18,0,0\nA,91387,nan,nan,nan,1123.3,18,0,0\nA,92387,nan,nan,nan,1120.0,18,0,0\nA,93387,nan,nan,nan,1115.8,18,0,0\nA,94387,nan,nan,nan,1115.8,18,0,4\nA,95387,nan,nan,nan,1114.2,18,0,0\nA,96387,nan,nan,nan,1109.2,18,0,2\nA,97387,nan,nan,nan,1110.0,18,0,0\nA,98387,nan,nan,nan,1111.7,18,0,0\nA,99387,nan,nan,nan,1119.2,18,0,0\nA,100387,nan,nan,nan,1115.8,18,0,0\nA,101387,nan,nan,nan,1107.5,18,0,0\nA,102387,nan,nan,nan,1106.7,18,0,0\nA,103387,nan,nan,nan,1105.0,18,0,0\nA,104387,nan,nan,nan,1110.8,18,0,0\nA,105387,nan,nan,nan,1115.0,18,0,0\nA,106387,nan,nan,nan,1120.0,18,0,0\nA,107387,nan,nan,nan,1123.3,18,0,0\nA,108387,nan,nan,nan,1122.5,18,0,0\nA,109387,nan,nan,nan,1118.3,18,0,0\nA,110387,nan,nan,nan,1114.2,18,0,0\nA,111387,nan,nan,nan,1116.7,18,0,0\nA,112387,nan,nan,nan,1115.8,18,0,0\nA,113387,nan,nan,nan,1115.8,18,0,2\nA,114387,nan,nan,nan,1109.2,18,0,0\nA,115387,nan,nan,nan,1138.3,18,0,16\nA,116387,nan,nan,nan,1095.0,18,0,0\nA,117387,nan,nan,nan,1100.0,18,0,0\nA,118387,nan,nan,nan,1100.8,18,0,0\nA,119387,nan,nan,nan,1102.5,18,0,0\nA,120387,nan,nan,nan,1102.5,18,0,0\nA,121387,nan,nan,nan,1097.5,18,0,0\nA,122387,nan,nan,nan,1093.3,18,0,0\nA,123387,nan,nan,nan,1089.2,18,0,0\nA,124387,nan,nan,nan,1087.5,18,0,0\nA,125387,nan,nan,nan,1070.0,18,0,0\nA,126387,nan,nan,nan,907.5,21,0,62\nA,127387,nan,nan,nan,1077.5,20,0,0\nA,128387,nan,nan,nan,1049.2,20,0,0\nA,129387,nan,nan,nan,933.3,20,0,4\nA,130387,nan,nan,nan,786.7,22,0,30\nA,131387,nan,nan,nan,773.3,22,0,16\nA,132387,nan,nan,nan,1016.7,21,0,12\nA,133387,nan,nan,nan,1027.5,21,0,0\nA,134387,nan,nan,nan,980.0,22,1,5\nA,135387,nan,nan,nan,1010.0,21,0,3\nA,136387,nan,nan,nan,1055.0,20,0,0\nA,137387,nan,nan,nan,1060.0,20,0,0\nA,138387,nan,nan,nan,1058.3,20,0,0\nA,139387,nan,nan,nan,1054.2,20,0,0\nA,140387,nan,nan,nan,1050.0,19,0,0\nA,141387,nan,nan,nan,1045.8,19,0,0\nA,142387,nan,nan,nan,1046.7,19,0,0\nA,143387,nan,nan,nan,1044.2,19,0,0\nA,144387,nan,nan,nan,1043.3,19,0,0\nA,145387,nan,nan,nan,1043.3,19,0,0\nA,146387,nan,nan,nan,1045.8,19,0,0\nA,147387,nan,nan,nan,1045.0,18,0,0\nA,148387,nan,nan,nan,1041.7,19,0,0\nA,149387,nan,nan,nan,1038.3,18,0,0\nA,150387,nan,nan,nan,1038.3,18,0,0\nA,151387,nan,nan,nan,1038.3,18,0,0\nA,152387,nan,nan,nan,1037.5,18,0,0\nA,153387,nan,nan,nan,1038.3,18,0,0\nA,154387,nan,nan,nan,1036.7,18,0,0\nA,155387,nan,nan,nan,1037.5,18,0,0\nA,156387,nan,nan,nan,1035.8,18,0,4\nA,157387,nan,nan,nan,1035.8,18,0,0\nA,158387,nan,nan,nan,1040.0,18,0,0\nA,159387,nan,nan,nan,1038.3,18,0,0\nA,160387,nan,nan,nan,1041.7,18,0,0\nA,161387,nan,nan,nan,1039.2,18,0,0\nA,162387,nan,nan,nan,1047.5,18,0,0\nA,163387,nan,nan,nan,1044.2,18,0,0\nA,164387,nan,nan,nan,1052.5,18,0,0\nA,165387,nan,nan,nan,1059.2,18,0,0\nA,166387,nan,nan,nan,1060.8,18,0,0\nA,167387,nan,nan,nan,1065.8,18,0,0\nA,168387,nan,nan,nan,1066.7,18,0,0\nA,169387,nan,nan,nan,1068.3,18,0,2\nA,170387,nan,nan,nan,1067.5,18,0,4\nA,171387,nan,nan,nan,1066.7,18,0,0\nA,172387,nan,nan,nan,1069.2,18,0,0\nA,173387,nan,nan,nan,994.2,18,0,0\nA,174387,nan,nan,nan,1074.2,18,0,0\nA,175387,nan,nan,nan,1090.0,18,0,0\nA,176387,nan,nan,nan,1105.8,18,0,0\nA,177387,nan,nan,nan,1110.8,18,0,0\nA,178387,nan,nan,nan,1111.7,18,0,0\nA,179387,nan,nan,nan,1113.3,18,0,0\nA,180387,nan,nan,nan,1119.2,18,0,0\nA,181387,nan,nan,nan,1123.3,18,0,0\nA,182387,nan,nan,nan,1129.2,18,0,0\nA,183387,nan,nan,nan,1131.7,18,0,0\nA,184387,nan,nan,nan,1133.3,18,0,0\nA,185387,nan,nan,nan,1135.0,18,0,0\nA,186387,nan,nan,nan,1139.2,18,0,0\nA,187387,nan,nan,nan,1142.5,18,0,0\nA,188387,nan,nan,nan,1142.5,18,0,0\nA,189387,nan,nan,nan,1142.5,18,0,0\nA,190387,nan,nan,nan,1142.5,18,0,0\nA,191387,nan,nan,nan,1141.7,18,0,0\nA,192387,nan,nan,nan,1140.0,18,0,4\nA,193387,nan,nan,nan,1140.8,18,0,0\nA,194387,nan,nan,nan,1140.8,18,0,2\nA,195387,nan,nan,nan,1143.3,18,0,0\nA,196387,nan,nan,nan,1145.8,18,0,0\nA,197387,nan,nan,nan,1144.2,18,0,0\nA,198387,nan,nan,nan,1151.7,18,0,0\nA,199387,nan,nan,nan,1150.8,18,0,10\nA,200387,nan,nan,nan,1145.8,18,0,2\nA,201387,nan,nan,nan,1145.8,18,0,24\nA,202387,nan,nan,nan,1145.0,18,0,0\nA,203387,nan,nan,nan,1146.7,18,0,0\nA,204387,nan,nan,nan,1147.5,18,0,0\nA,205387,nan,nan,nan,1150.8,18,0,0\nA,206387,nan,nan,nan,1154.2,18,0,0\nA,207387,nan,nan,nan,1156.7,18,0,0\nA,208387,nan,nan,nan,1161.7,18,0,0\nA,209387,nan,nan,nan,1169.2,18,0,0\nA,210387,nan,nan,nan,1174.2,18,0,0\nA,211387,nan,nan,nan,1175.8,18,0,0\nA,212387,nan,nan,nan,1165.8,18,0,0\nA,213387,nan,nan,nan,1028.3,18,0,0\nA,214387,nan,nan,nan,960.8,19,0,0\nA,215387,nan,nan,nan,122.5,19,0,0\nA,216387,nan,nan,nan,67.5,18,0,0\nA,217387,nan,nan,nan,55.8,18,0,0\nA,218387,nan,nan,nan,53.3,18,0,0\nA,219387,nan,nan,nan,47.5,19,0,0\nA,220387,nan,nan,nan,46.7,18,0,0\nA,221387,nan,nan,nan,45.8,19,0,0\nA,222387,nan,nan,nan,45.8,19,0,0\nA,223387,nan,nan,nan,45.8,19,0,0\nA,224387,nan,nan,nan,45.8,19,0,0\nA,225387,nan,nan,nan,45.0,19,0,0\nA,226387,nan,nan,nan,46.7,20,0,0\nA,227387,nan,nan,nan,911.7,19,0,8\nA,228387,nan,nan,nan,855.8,19,0,14\nA,229387,nan,nan,nan,853.3,19,0,18\nA,230387,nan,nan,nan,922.5,19,0,16\nA,231387,nan,nan,nan,1156.7,19,0,8\nA,232387,nan,nan,nan,399.2,19,0,0\nA,233387,nan,nan,nan,643.3,19,1,75\nA,234387,nan,nan,nan,1151.7,20,0,37\nA,235387,nan,nan,nan,1188.3,20,0,6\nA,236387,nan,nan,nan,1215.0,20,0,0\nA,237387,nan,nan,nan,1218.3,20,0,0\nA,238387,nan,nan,nan,1222.5,20,0,0\nA,239387,nan,nan,nan,1226.7,20,0,0\nA,240387,nan,nan,nan,1229.2,19,0,0\nA,241387,nan,nan,nan,1230.8,19,0,0\nA,242387,nan,nan,nan,1235.8,19,0,0\nA,243387,nan,nan,nan,1239.2,19,0,0\nA,244387,nan,nan,nan,1240.8,19,0,0\nA,245387,nan,nan,nan,1232.5,19,0,2\nA,246387,nan,nan,nan,1226.7,19,0,8\nA,247387,nan,nan,nan,1236.7,19,0,4\nA,248387,nan,nan,nan,1235.8,19,0,16\nA,249387,nan,nan,nan,1234.2,19,0,28\nA,250387,nan,nan,nan,1234.2,19,0,8\nA,251387,nan,nan,nan,1233.3,19,0,0\nA,252387,nan,nan,nan,1232.5,19,0,0\nA,253387,nan,nan,nan,1232.5,19,0,0\nA,254387,nan,nan,nan,1232.5,19,0,0\nA,255387,nan,nan,nan,1231.7,19,0,0\nA,256387,nan,nan,nan,1230.0,19,0,0\nA,257387,nan,nan,nan,1230.8,19,0,0\nA,258387,nan,nan,nan,1233.3,19,0,0\nA,259387,nan,nan,nan,1230.8,19,0,0\nA,260387,nan,nan,nan,1227.5,19,0,0\nA,261387,nan,nan,nan,1228.3,19,0,0\nA,262387,nan,nan,nan,1225.0,19,0,0\nA,263387,nan,nan,nan,1221.7,19,0,0\nA,264387,nan,nan,nan,1221.7,19,0,0\nA,265387,nan,nan,nan,1223.3,19,0,0\nA,266387,nan,nan,nan,1226.7,19,0,0\nA,267387,nan,nan,nan,1235.0,19,0,0\nA,268387,nan,nan,nan,1236.7,19,0,0\nA,269387,nan,nan,nan,1237.5,18,0,0\nA,270387,nan,nan,nan,1238.3,19,0,0\nA,271387,nan,nan,nan,1237.5,19,0,0\nA,272387,nan,nan,nan,1235.0,19,0,0\nA,273387,nan,nan,nan,1239.2,19,0,0\nA,274387,nan,nan,nan,1237.5,19,0,0\nA,275387,nan,nan,nan,1239.2,18,0,0\nA,276387,nan,nan,nan,1243.3,19,0,0\nA,277387,nan,nan,nan,1243.3,18,0,0\nA,278387,nan,nan,nan,1241.7,18,0,0\nA,279387,nan,nan,nan,1238.3,18,0,0\nA,280387,nan,nan,nan,1241.7,18,0,0\nA,281387,nan,nan,nan,1240.8,18,0,0\nA,282387,nan,nan,nan,1240.0,18,0,0\nA,283387,nan,nan,nan,1239.2,18,0,0\nA,284387,nan,nan,nan,1240.0,18,0,0\nA,285387,nan,nan,nan,1241.7,18,0,0\nA,286387,nan,nan,nan,1242.5,18,0,0\nA,287387,nan,nan,nan,1242.5,18,0,0\nA,288387,nan,nan,nan,1242.5,18,0,0\nA,289387,nan,nan,nan,1244.2,18,0,0\nA,290387,nan,nan,nan,1245.8,18,0,0\nA,291387,nan,nan,nan,1246.7,18,0,0\nA,292387,nan,nan,nan,1245.8,18,0,0\nA,293387,nan,nan,nan,1250.0,18,0,0\nA,294387,nan,nan,nan,1259.2,18,0,0\nA,295387,nan,nan,nan,1260.0,18,0,0\nA,296387,nan,nan,nan,1255.8,18,0,0\nA,297387,nan,nan,nan,1253.3,18,0,0\nA,298387,nan,nan,nan,1254.2,18,0,0\nA,299387,nan,nan,nan,1252.5,18,0,0\nA,300387,nan,nan,nan,1242.5,18,0,0\nB,1000,nan,nan,nan,nan,40,nan,nan\nB,2000,nan,nan,nan,nan,37,nan,nan\nB,3000,nan,nan,nan,nan,34,nan,nan\nB,4000,nan,nan,nan,nan,30,nan,nan\nB,5000,nan,nan,nan,nan,28,nan,nan\nB,6000,nan,nan,nan,nan,26,nan,nan\nB,7000,nan,nan,nan,nan,25,nan,nan\nB,8000,nan,nan,nan,nan,24,nan,nan\nB,9000,nan,nan,nan,nan,23,nan,nan\nB,10000,nan,nan,nan,nan,22,nan,nan\nB,11000,nan,nan,nan,nan,21,nan,nan\nB,12000,nan,nan,nan,nan,22,nan,nan\nB,13000,nan,nan,nan,nan,21,nan,nan\nB,14000,nan,nan,nan,nan,23,nan,nan\nB,15000,nan,nan,nan,nan,26,nan,nan\nB,16000,nan,nan,nan,nan,27,nan,nan\nB,17000,nan,nan,nan,nan,25,nan,nan\nB,18000,nan,nan,nan,nan,27,nan,nan\nB,19000,nan,nan,nan,nan,27,nan,nan\nB,20000,nan,nan,nan,nan,30,nan,nan\nB,21000,nan,nan,nan,nan,30,nan,nan\nB,22000,nan,nan,nan,nan,30,nan,nan\nB,23000,nan,nan,nan,nan,30,nan,nan\nB,24000,nan,nan,nan,nan,33,nan,nan\nB,25000,nan,nan,nan,nan,36,nan,nan\nB,26000,nan,nan,nan,nan,36,nan,nan\nB,27000,nan,nan,nan,nan,35,nan,nan\nB,28000,nan,nan,nan,nan,33,nan,nan\nB,29000,nan,nan,nan,nan,32,nan,nan\nB,30000,nan,nan,nan,nan,30,nan,nan\nB,31000,nan,nan,nan,nan,28,nan,nan\nB,32000,nan,nan,nan,nan,28,nan,nan\nB,33000,nan,nan,nan,nan,30,nan,nan\nB,34000,nan,nan,nan,nan,32,nan,nan\nB,35000,nan,nan,nan,nan,30,nan,nan\nB,36000,nan,nan,nan,nan,29,nan,nan\nB,37000,nan,nan,nan,nan,27,nan,nan\nB,38000,nan,nan,nan,nan,26,nan,nan\nB,39000,nan,nan,nan,nan,25,nan,nan\nB,40000,nan,nan,nan,nan,24,nan,nan\nB,41000,nan,nan,nan,nan,25,nan,nan\nB,42000,nan,nan,nan,nan,25,nan,nan\nB,43000,nan,nan,nan,nan,26,nan,nan\nB,44000,nan,nan,nan,nan,25,nan,nan\nB,45000,nan,nan,nan,nan,24,nan,nan\nB,46000,nan,nan,nan,nan,23,nan,nan\nB,47000,nan,nan,nan,nan,22,nan,nan\nB,48000,nan,nan,nan,nan,21,nan,nan\nB,49000,nan,nan,nan,nan,21,nan,nan\nB,50000,nan,nan,nan,nan,20,nan,nan\nB,51000,nan,nan,nan,nan,20,nan,nan\nB,52000,nan,nan,nan,nan,20,nan,nan\nB,53000,nan,nan,nan,nan,19,nan,nan\nB,54000,nan,nan,nan,nan,19,nan,nan\nB,55000,nan,nan,nan,nan,19,nan,nan\nB,56000,nan,nan,nan,nan,19,nan,nan\nB,57000,nan,nan,nan,nan,19,nan,nan\nB,58000,nan,nan,nan,nan,18,nan,nan\nB,59000,nan,nan,nan,nan,18,nan,nan\nB,60000,nan,nan,nan,nan,18,nan,nan\nB,61000,nan,nan,nan,nan,18,nan,nan\nB,62000,nan,nan,nan,nan,18,nan,nan\nB,63000,nan,nan,nan,nan,18,nan,nan\nB,64000,nan,nan,nan,nan,18,nan,nan\nB,65000,nan,nan,nan,nan,18,nan,nan\nB,66000,nan,nan,nan,nan,18,nan,nan\nB,67000,nan,nan,nan,nan,18,nan,nan\nB,68000,nan,nan,nan,nan,17,nan,nan\nB,69000,nan,nan,nan,nan,18,nan,nan\nB,70000,nan,nan,nan,nan,17,nan,nan\nB,71000,nan,nan,nan,nan,17,nan,nan\nB,72000,nan,nan,nan,nan,17,nan,nan\nB,73000,nan,nan,nan,nan,17,nan,nan\nB,74000,nan,nan,nan,nan,17,nan,nan\nB,75000,nan,nan,nan,nan,17,nan,nan\nB,76000,nan,nan,nan,nan,17,nan,nan\nB,77000,nan,nan,nan,nan,17,nan,nan\nB,78000,nan,nan,nan,nan,17,nan,nan\nB,79000,nan,nan,nan,nan,17,nan,nan\nB,80000,nan,nan,nan,nan,17,nan,nan\nB,81000,nan,nan,nan,nan,17,nan,nan\nB,82000,nan,nan,nan,nan,17,nan,nan\nB,83000,nan,nan,nan,nan,17,nan,nan\nB,84000,nan,nan,nan,nan,17,nan,nan\nB,85000,nan,nan,nan,nan,17,nan,nan\nB,86000,nan,nan,nan,nan,17,nan,nan\nB,87000,nan,nan,nan,nan,17,nan,nan\nB,88000,nan,nan,nan,nan,17,nan,nan\nB,89000,nan,nan,nan,nan,17,nan,nan\nB,90000,nan,nan,nan,nan,17,nan,nan\nB,91000,nan,nan,nan,nan,17,nan,nan\nB,92000,nan,nan,nan,nan,17,nan,nan\nB,93000,nan,nan,nan,nan,17,nan,nan\nB,94000,nan,nan,nan,nan,17,nan,nan\nB,95000,nan,nan,nan,nan,17,nan,nan\nB,96000,nan,nan,nan,nan,17,nan,nan\nB,97000,nan,nan,nan,nan,17,nan,nan\nB,98000,nan,nan,nan,nan,17,nan,nan\nB,99000,nan,nan,nan,nan,17,nan,nan\nB,100000,nan,nan,nan,nan,17,nan,nan\nB,101000,nan,nan,nan,nan,17,nan,nan\nB,102000,nan,nan,nan,nan,17,nan,nan\nB,103000,nan,nan,nan,nan,17,nan,nan\nB,104000,nan,nan,nan,nan,17,nan,nan\nB,105000,nan,nan,nan,nan,17,nan,nan\nB,106000,nan,nan,nan,nan,17,nan,nan\nB,107000,nan,nan,nan,nan,17,nan,nan\nB,108000,nan,nan,nan,nan,19,nan,nan\nB,109000,nan,nan,nan,nan,37,nan,nan\nB,110000,nan,nan,nan,nan,48,nan,nan\nB,111000,nan,nan,nan,nan,45,nan,nan\nB,112000,nan,nan,nan,nan,50,nan,nan\nB,113000,nan,nan,nan,nan,47,nan,nan\nB,114000,nan,nan,nan,nan,45,nan,nan\nB,115000,nan,nan,nan,nan,41,nan,nan\nB,116000,nan,nan,nan,nan,37,nan,nan\nB,117000,nan,nan,nan,nan,34,nan,nan\nB,118000,nan,nan,nan,nan,30,nan,nan\nB,119000,nan,nan,nan,nan,28,nan,nan\nB,120000,nan,nan,nan,nan,26,nan,nan\n"}];
+
+/* ============ Estado ============ */
+let datasets = [];        // {nombre, color, visible, filas:[{t, vals, segmento, origen}], campos:Set}
+let canalesActivos = new Set(["lux","mq135_raw","sonido_flancos_1s","temperatura_C","humedad_pct"]);
+let cursor = null;        // segundos | null
+let filtroSegmento = "";
+let filtroOrigen = "";
+
+const $ = (s) => document.querySelector(s);
+
+/* ============ Utilidades ============ */
+const nf = new Intl.NumberFormat("es-CL", {maximumFractionDigits:2});
+function fmt(v){
+  if (v === null || v === undefined || Number.isNaN(v)) return "nan";
+  return nf.format(v);
+}
+function color(i){ return PALETA[i % PALETA.length]; }
+
+function parseCSV(texto){
+  const lineas = texto.replace(/\ufeff/g,"").split(/\r?\n/).filter(l => l.trim() !== "" && !l.startsWith("#"));
+  if (lineas.length < 2) return null;
+  const cab = lineas[0].split(",").map(c => c.trim());
+  const filas = [];
+  for (let i = 1; i < lineas.length; i++){
+    const c = lineas[i].split(",");
+    if (c.length === cab.length) filas.push(c.map(x => x.trim()));
+  }
+  return {cab, filas};
+}
+
+function numero(x){
+  if (x === "" || x === "nan" || x === "NaN" || x === undefined) return null;
+  const v = Number(x);
+  return Number.isFinite(v) ? v : null;
+}
+
+/* ============ Carga ============ */
+function cargarTexto(nombre, texto, colorIdx){
+  const p = parseCSV(texto);
+  if (!p) return;
+  const iSeg = p.cab.indexOf("segmento");
+  const iOri = p.cab.indexOf("origen");
+  const iT   = p.cab.indexOf("tiempo_ms");
+  if (iT < 0){ alert(`"${nombre}": falta la columna tiempo_ms`); return; }
+  const campos = p.cab.filter(c => CAMPOS[c]);
+
+  const grupos = new Map();
+  for (const c of p.filas){
+    const seg = iSeg >= 0 ? c[iSeg] : "";
+    const clave = seg || "única";
+    if (!grupos.has(clave)) grupos.set(clave, []);
+    const vals = {};
+    for (const campo of campos) vals[campo] = numero(c[p.cab.indexOf(campo)]);
+    grupos.get(clave).push({
+      t: numero(c[iT]),
+      vals,
+      origen: iOri >= 0 ? c[iOri] : "",
+      segmentoHumano: seg === "única" ? "" : seg,
+    });
+  }
+
+  let k = 0;
+  for (const [seg, filas] of grupos){
+    const consolidadas = filas.filter(f => f.t !== null);
+    if (!consolidadas.length) continue;
+    datasets.push({
+      nombre: seg === "única" ? nombre : `${nombre} · ${seg}`,
+      color: color(colorIdx + k),
+      visible: true,
+      filas: consolidadas,
+      campos: new Set(campos),
+    });
+    k++;
+  }
+  actualizarUI();
+}
+
+function cargarArchivos(lista){
+  const archivos = Array.from(lista);
+  const base = datasets.length;
+  archivos.forEach((a, i) => {
+    const lector = new FileReader();
+    lector.onload = () => cargarTexto(a.name.replace(/\.csv$/i,""), lector.result, base + i);
+    lector.readAsText(a, "utf-8");
+  });
+}
+
+/* ============ Filtros ============ */
+function filasVisibles(ds){
+  return ds.filas.filter(f =>
+    (filtroSegmento === "" || (f.segmentoHumano ?? "") === filtroSegmento) &&
+    (filtroOrigen === "" || f.origen === filtroOrigen));
+}
+
+/* segmento explícito por fila (para filtros y export) */
+function anotarSegmentos(){
+  for (const ds of datasets){
+    const m = ds.nombre.match(/·\s*([A-Z])$/);
+    for (const f of ds.filas) if (f.segmentoHumano === undefined) f.segmentoHumano = m ? m[1] : "";
+  }
+}
+
+/* ============ Dibujo ============ */
+function prepararCanvas(cv){
+  const r = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, Math.round(r.width * dpr));
+  cv.height = Math.max(1, Math.round(r.height * dpr));
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return {ctx, w:r.width, h:r.height};
+}
+
+function extremosTiempo(){
+  let max = 0;
+  for (const ds of datasets){
+    if (!ds.visible) continue;
+    const fs = ds.filas;
+    if (fs.length) max = Math.max(max, fs[fs.length-1].t/1000);
+  }
+  return max || 1;
+}
+
+function dibujarRegla(){
+  const cv = $("#regla");
+  const {ctx, w, h} = prepararCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const xmax = extremosTiempo();
+  ctx.strokeStyle = "rgba(159,176,191,.25)";
+  ctx.fillStyle = "rgba(159,176,191,.75)";
+  ctx.font = "10px " + getComputedStyle(document.body).getPropertyValue("--mono");
+  ctx.textAlign = "center";
+  const paso = Math.max(1, Math.round(xmax/8));
+  for (let s = 0; s <= xmax; s += paso){
+    const x = (s/xmax)*w;
+    ctx.beginPath(); ctx.moveTo(x, h-10); ctx.lineTo(x, h); ctx.stroke();
+    ctx.fillText(s + " s", x, h-14);
+  }
+  if (cursor !== null){
+    const x = (cursor/xmax)*w;
+    ctx.strokeStyle = "rgba(63,184,166,.8)";
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h-10); ctx.stroke();
+  }
+}
+
+function escalarY(valores, alto, margen){
+  let mn = Infinity, mx = -Infinity;
+  for (const v of valores){ if (v !== null){ mn = Math.min(mn,v); mx = Math.max(mx,v); } }
+  if (mn === Infinity) return {mn:0, mx:1, y:(v)=>alto/2};
+  if (mn === mx){ mn -= 1; mx += 1; }
+  const rango = mx - mn;
+  mn -= rango*0.08; mx += rango*0.08;
+  const y = (v) => margen + (1 - (v-mn)/(mx-mn)) * (alto - margen*2);
+  return {mn, mx, y};
+}
+
+function dibujarTraza(canvas, campo){
+  const {ctx, w, h} = prepararCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const xmax = extremosTiempo();
+  const margen = 12;
+  const seriesVisibles = datasets.filter(ds => ds.visible && ds.campos.has(campo));
+  const todos = [];
+  for (const ds of seriesVisibles)
+    for (const f of filasVisibles(ds)){ const v = f.vals[campo]; if (v !== null) todos.push(v); }
+  const esc = escalarY(todos, h, margen);
+
+  // grilla horizontal
+  ctx.strokeStyle = "rgba(159,176,191,.09)";
+  ctx.fillStyle = "rgba(159,176,191,.55)";
+  ctx.font = "10px " + getComputedStyle(document.body).getPropertyValue("--mono");
+  ctx.textAlign = "right";
+  for (let i = 0; i <= 4; i++){
+    const y = margen + (i/4)*(h - margen*2);
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    const val = esc.mx - (i/4)*(esc.mx-esc.mn);
+    ctx.fillText(fmt(val), 46, y+3);
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(50, 0, w-52, h); ctx.clip();
+
+  // series
+  for (const ds of seriesVisibles){
+    ctx.strokeStyle = ds.color;
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = "round";
+    let abierto = false;
+    ctx.beginPath();
+    for (const f of filasVisibles(ds)){
+      const v = f.vals[campo];
+      if (v === null || f.t === null){ abierto = false; continue; }
+      const x = 50 + (f.t/1000 / xmax) * (w-52);
+      const y = esc.y(v);
+      if (!abierto){ ctx.moveTo(x,y); abierto = true; }
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // cursor
+  if (cursor !== null){
+    const x = 50 + (cursor/xmax)*(w-52);
+    ctx.strokeStyle = "rgba(63,184,166,.65)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function valorEnCursor(ds, campo){
+  if (cursor === null) return null;
+  let mejor = null, dist = Infinity;
+  for (const f of ds.filas){
+    if (f.t === null) continue;
+    const d = Math.abs(f.t/1000 - cursor);
+    if (d < dist){ dist = d; mejor = f; }
+    if (f.t/1000 > cursor + 5) break;
+  }
+  if (!mejor || dist > 10) return null;
+  return mejor.vals[campo];
+}
+
+function construirTrazas(){
+  const cont = $("#trazas");
+  const activos = ORDEN_CAMPOS.filter(c => canalesActivos.has(c));
+  const existentes = new Set();
+
+  if (!datasets.length){
+    cont.innerHTML = '<div class="sinDatos">Sin datos cargados. Usa «Cargar CSV» o «Datos de ejemplo».</div>';
+    return;
+  }
+
+  for (const campo of activos){
+    let div = cont.querySelector(`[data-campo="${campo}"]`);
+    if (!div){
+      div = document.createElement("div");
+      div.className = "traza";
+      div.dataset.campo = campo;
+      div.innerHTML = `
+        <div class="cab">
+          <span class="nom">${CAMPOS[campo].etiqueta}</span>
+          <span class="uni">${CAMPOS[campo].unidad}</span>
+          <span class="lectura"></span>
+        </div>
+        <div class="lienzo"><canvas></canvas></div>`;
+      cont.appendChild(div);
+    }
+    existentes.add(campo);
+  }
+  for (const div of Array.from(cont.children)){
+    if (div.dataset && div.dataset.campo && !existentes.has(div.dataset.campo)) div.remove();
+  }
+}
+
+function refrescarDibujo(){
+  const activos = ORDEN_CAMPOS.filter(c => canalesActivos.has(c));
+  for (const campo of activos){
+    const div = document.querySelector(`[data-campo="${campo}"]`);
+    if (!div) continue;
+    dibujarTraza(div.querySelector("canvas"), campo);
+    const lect = div.querySelector(".lectura");
+    const partes = [];
+    let mn = Infinity, mx = -Infinity, suma = 0, n = 0;
+    for (const ds of datasets){
+      if (!ds.visible || !ds.campos.has(campo)) continue;
+      const v = valorEnCursor(ds, campo);
+      partes.push(v === null ? `${ds.nombre.split("·").pop().trim()}: —` : `${ds.nombre.split("·").pop().trim()}: ${fmt(v)}`);
+      for (const f of filasVisibles(ds)){
+        const x = f.vals[campo];
+        if (x === null) continue;
+        mn = Math.min(mn, x); mx = Math.max(mx, x); suma += x; n++;
+      }
+    }
+    lect.textContent = partes.join("   ");
+    const uni = div.querySelector(".uni");
+    uni.textContent = n
+      ? `${CAMPOS[campo].unidad} · mín ${fmt(mn)} · máx ${fmt(mx)} · prom ${fmt(suma/n)}`
+      : CAMPOS[campo].unidad;
+  }
+  dibujarRegla();
+}
+
+function refrescar(){
+  construirTrazas();
+  refrescarDibujo();
+  pintarListas();
+  pintarStats();
+  pintarVista();
+}
+
+/* ============ Paneles ============ */
+function pintarListas(){
+  const ul = $("#listaDatos");
+  ul.innerHTML = "";
+  if (!datasets.length){
+    ul.innerHTML = '<li class="vacio">Sin datos. Carga un CSV o usa los de ejemplo.</li>';
+  }
+  datasets.forEach((ds, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span class="punto" style="background:${ds.color}"></span>
+      <span class="nomDatos" title="${ds.nombre}">${ds.nombre}</span>
+      <span class="meta">${ds.filas.length} filas</span>
+      <button class="ojo" title="Mostrar u ocultar" aria-pressed="${ds.visible}">${ds.visible ? "◉" : "◌"}</button>`;
+    li.querySelector(".ojo").addEventListener("click", () => { ds.visible = !ds.visible; refrescar(); });
+    ul.appendChild(li);
+  });
+
+  const contCanales = $("#listaCanales");
+  contCanales.innerHTML = "";
+  const presentes = ORDEN_CAMPOS.filter(c => datasets.some(ds => ds.campos.has(c)));
+  if (!presentes.length) contCanales.innerHTML = '<div class="vacio">Sin canales.</div>';
+  for (const campo of presentes){
+    const id = "ch_" + campo;
+    const lab = document.createElement("label");
+    lab.innerHTML = `<input type="checkbox" id="${id}" ${canalesActivos.has(campo) ? "checked" : ""}>
+      <span>${CAMPOS[campo].etiqueta}</span><span class="u">${CAMPOS[campo].unidad}</span>`;
+    lab.querySelector("input").addEventListener("change", (e) => {
+      if (e.target.checked) canalesActivos.add(campo); else canalesActivos.delete(campo);
+      refrescar();
+    });
+    contCanales.appendChild(lab);
+  }
+
+  const segs = new Set(); const origs = new Set();
+  for (const ds of datasets) for (const f of ds.filas){
+    if (f.segmentoHumano) segs.add(f.segmentoHumano);
+    if (f.origen) origs.add(f.origen);
+  }
+  const selS = $("#fSegmento"), selO = $("#fOrigen");
+  const poblar = (sel, valores, etiqueta) => {
+    const actual = sel.value;
+    sel.innerHTML = `<option value="">${etiqueta}: todos</option>` +
+      Array.from(valores).sort().map(v => `<option value="${v}">${etiqueta}: ${v}</option>`).join("");
+    if (Array.from(valores).includes(actual)) sel.value = actual;
+  };
+  poblar(selS, segs, "Segmento");
+  poblar(selO, origs, "Origen");
+  filtroSegmento = selS.value;
+  filtroOrigen = selO.value;
+}
+
+function pintarStats(){
+  const t = $("#tablaStats");
+  const campos = ORDEN_CAMPOS.filter(c => datasets.some(ds => ds.campos.has(c)));
+  let html = "<thead><tr><th>Serie</th><th>n</th>" +
+    campos.map(c => `<th>${CAMPOS[c].etiqueta}<br><span style="color:var(--tinta3)">mín · máx · prom</span></th>`).join("") +
+    "</tr></thead><tbody>";
+  for (const ds of datasets){
+    html += `<tr><td class="txt"><span class="punto" style="display:inline-block;background:${ds.color};margin-right:7px"></span>${ds.nombre}</td>`;
+    const valores = {};
+    for (const c of campos){
+      valores[c] = filasVisibles(ds).map(f => f.vals[c]).filter(v => v !== null);
+    }
+    const n = Math.max(...campos.map(c => valores[c].length), 0);
+    html += `<td>${n}</td>`;
+    for (const c of campos){
+      const vs = valores[c];
+      if (!vs.length){ html += "<td>—</td>"; continue; }
+      const mn = Math.min(...vs), mx = Math.max(...vs), pr = vs.reduce((a,b)=>a+b,0)/vs.length;
+      html += `<td>${fmt(mn)} · ${fmt(mx)} · ${fmt(pr)}</td>`;
+    }
+    html += "</tr>";
+  }
+  html += "</tbody>";
+  t.innerHTML = html;
+}
+
+function pintarVista(){
+  const t = $("#tablaDatos");
+  const campos = ORDEN_CAMPOS.filter(c => datasets.some(ds => ds.campos.has(c)));
+  const extra = new Set();
+  for (const ds of datasets) for (const f of ds.filas) if (f.origen) extra.add("origen");
+  let html = "<thead><tr><th>Serie</th><th>t (s)</th>" +
+    campos.map(c => `<th>${CAMPOS[c].etiqueta}</th>`).join("") +
+    (extra.has("origen") ? "<th>origen</th>" : "") + "</tr></thead><tbody>";
+  let mostradas = 0, total = 0;
+  for (const ds of datasets){
+    if (mostradas >= MAX_FILAS_VISTA) break;
+    const fs = filasVisibles(ds);
+    total += fs.length;
+    for (const f of fs){
+      if (mostradas >= MAX_FILAS_VISTA) break;
+      html += `<tr><td class="txt"><span class="punto" style="display:inline-block;background:${ds.color};margin-right:7px"></span>${ds.nombre}</td><td>${fmt(f.t/1000)}</td>`;
+      for (const c of campos) html += `<td>${fmt(f.vals[c])}</td>`;
+      if (extra.has("origen")) html += `<td class="txt">${f.origen || "—"}</td>`;
+      html += "</tr>";
+      mostradas++;
+    }
+  }
+  html += "</tbody>";
+  t.innerHTML = html;
+  $("#notaDatos").textContent = total > mostradas
+    ? `Mostrando ${mostradas} de ${total} filas (filtros activos aplicados).`
+    : `${total} filas en vista.`;
+}
+
+function pintarResumen(){
+  const el = $("#resumen");
+  if (!datasets.length){ el.innerHTML = '<div class="vacio">—</div>'; return; }
+  const filas = datasets.reduce((a,ds) => a + ds.filas.length, 0);
+  const segs = new Set(); for (const ds of datasets) for (const f of ds.filas) if (f.segmentoHumano) segs.add(f.segmentoHumano);
+  el.innerHTML = `
+    <div class="meta">series · ${datasets.length}</div>
+    <div class="meta">filas · ${filas}</div>
+    <div class="meta">canales · ${new Set(datasets.flatMap(ds => Array.from(ds.campos))).size}</div>
+    ${segs.size ? `<div class="meta">segmentos · ${Array.from(segs).sort().join(", ")}</div>` : ""}`;
+}
+
+function actualizarUI(){ pintarResumen(); refrescar(); }
+
+/* ============ Exportar ============ */
+function exportar(){
+  const campos = ORDEN_CAMPOS.filter(c => datasets.some(ds => ds.campos.has(c)));
+  const lineas = ["serie,segmento,tiempo_ms," + campos.join(",") + ",origen"];
+  for (const ds of datasets){
+    if (!ds.visible) continue;
+    for (const f of filasVisibles(ds)){
+      lineas.push([
+        `"${ds.nombre}"`, f.segmentoHumano || "", f.t,
+        ...campos.map(c => f.vals[c] === null ? "nan" : f.vals[c]),
+        f.origen ? `"${f.origen}"` : "",
+      ].join(","));
+    }
+  }
+  const blob = new Blob([lineas.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "datos_visibles.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportarFeatures(){
+  const ventana = 5;
+  const campos = ORDEN_CAMPOS.filter(c => datasets.some(ds => ds.campos.has(c)));
+  if (!campos.length) return;
+  const cab = ["serie","segmento","tiempo_ms"];
+  for (const c of campos) cab.push(c, c + "_media5", c + "_std5", c + "_falta");
+  cab.push("origen");
+  const lineas = [cab.join(",")];
+  for (const ds of datasets){
+    if (!ds.visible) continue;
+    const fs = filasVisibles(ds);
+    for (let i = 0; i < fs.length; i++){
+      const fila = [`"${ds.nombre}"`, fs[i].segmentoHumano || "", fs[i].t];
+      for (const c of campos){
+        const v = fs[i].vals[c];
+        const vv = [];
+        for (let k = Math.max(0, i - ventana + 1); k <= i; k++){
+          const x = fs[k].vals[c];
+          if (x !== null) vv.push(x);
+        }
+        let media = "nan", std = "nan";
+        if (vv.length){
+          const m = vv.reduce((a,b) => a + b, 0) / vv.length;
+          media = m;
+          std = Math.sqrt(vv.reduce((a,b) => a + (b-m)*(b-m), 0) / vv.length);
+        }
+        fila.push(v === null ? "nan" : v, media, std, v === null ? 1 : 0);
+      }
+      fila.push(fs[i].origen ? `"${fs[i].origen}"` : "");
+      lineas.push(fila.join(","));
+    }
+  }
+  const blob = new Blob([lineas.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "features_ml.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============ Eventos ============ */
+$("#archivos").addEventListener("change", (e) => { cargarArchivos(e.target.files); e.target.value = ""; });
+$("#btnEjemplo").addEventListener("click", () => {
+  if (!DATOS_EMBEBIDOS.length){ alert("No hay datos embebidos en este archivo."); return; }
+  const base = datasets.length;
+  DATOS_EMBEBIDOS.forEach((d,i) => cargarTexto(d.nombre, d.csv, base + i));
+});
+$("#btnExportar").addEventListener("click", exportar);
+$("#btnFeatures").addEventListener("click", exportarFeatures);
+$("#btnLimpiar").addEventListener("click", () => { datasets = []; actualizarUI(); });
+$("#fSegmento").addEventListener("change", (e) => { filtroSegmento = e.target.value; refrescar(); });
+$("#fOrigen").addEventListener("change", (e) => { filtroOrigen = e.target.value; refrescar(); });
+
+document.addEventListener("mousemove", (e) => {
+  const traza = e.target.closest(".traza");
+  const regla = e.target.closest(".regla");
+  const cv = traza ? traza.querySelector("canvas") : (regla ? $("#regla") : null);
+  if (!cv){ if (cursor !== null){ cursor = null; refrescarDibujo(); } return; }
+  const r = cv.getBoundingClientRect();
+  const rel = e.clientX - r.left;
+  const x0 = traza ? 50 : 0, ancho = traza ? r.width - 52 : r.width;
+  const frac = Math.min(1, Math.max(0, (rel - x0) / ancho));
+  cursor = frac * extremosTiempo();
+  refrescarDibujo();
+});
+document.documentElement.addEventListener("mouseleave", () => {
+  if (cursor !== null){ cursor = null; refrescarDibujo(); }
+});
+window.addEventListener("resize", () => refrescar());
+
+/* ============ Arranque ============ */
+pintarResumen();
+pintarListas();
+construirTrazas();
+if (DATOS_EMBEBIDOS.length) $("#btnEjemplo").click();
+</script>
+</body>
+</html>
