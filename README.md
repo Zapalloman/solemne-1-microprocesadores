@@ -15,6 +15,9 @@ Código, datos de la prueba y visor para la estación ambiental con
 ├── 99_integrado_grupo1/       PROGRAMA INTEGRADO (los 5 sensores juntos)
 ├── datos/
 │   └── csv_combinado_grupo1_20260916.csv   Datos de la prueba (16-09-2026)
+├── documentos/
+│   ├── informe_grupo1.pdf     Informe escrito
+│   └── presentacion_grupo1.pdf  Presentación de la defensa
 └── herramientas/
     └── gui_datos.html         Visor de datos (se abre en el navegador)
 ```
@@ -57,6 +60,11 @@ open herramientas/gui_datos.html
 - **Exportar visibles**: CSV con las series desplegadas.
 - **Exportar features (ML)**: valor, media móvil, desviación estándar y marca
   de dato faltante por canal.
+
+## Documentos
+
+- [Informe escrito (PDF)](documentos/informe_grupo1.pdf)
+- [Presentación de la defensa (PDF)](documentos/presentacion_grupo1.pdf)
 
 ## Estado del hardware (16-09-2026)
 
