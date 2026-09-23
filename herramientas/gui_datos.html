@@ -434,6 +434,8 @@ function construirTrazas(){
     cont.innerHTML = '<div class="sinDatos">Sin datos cargados. Usa «Cargar CSV» o «Datos de ejemplo».</div>';
     return;
   }
+  const aviso = cont.querySelector(".sinDatos");
+  if (aviso) aviso.remove();
 
   for (const campo of activos){
     let div = cont.querySelector(`[data-campo="${campo}"]`);

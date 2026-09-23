@@ -49,6 +49,8 @@ funcional quedan en `nan` (no se inventaron valores).
 open herramientas/gui_datos.html
 ```
 
+![Visor de datos con el CSV de la prueba](herramientas/gui_datos.png)
+
 - Trae los datos de arriba **embebidos** (botón "Datos de ejemplo").
 - **Cargar CSV**: acepta uno o varios archivos.
 - Filtros por segmento (A/B) y por origen; cada traza muestra mín / máx / prom.
