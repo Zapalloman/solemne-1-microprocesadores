@@ -63,5 +63,5 @@ open herramientas/gui_datos.html
 | BH1750 | ✅ funciona (~45 a 1260 lx) |
 | Sonido | ✅ funciona (flancos al aplaudir) |
 | MQ135 | ✅ funciona (requiere conexión directa, la protoboard fallaba) |
-| DHT11 | ❌ no responde (módulo defectuoso) |
+| DHT11 | ✅ funciona(requiere conexión directa)|
 | BMP180 | ❌ deja el bus I2C muerto; no soldado |
